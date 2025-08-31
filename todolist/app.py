@@ -3,13 +3,20 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, url_for, request, redirect
 from datetime import datetime
 from os.path import isfile
+import importlib.resources as pkg_resources
 
 
-app = Flask(__name__)
+import os
 
+app = Flask(
+        __name__,
+        template_folder=str(pkg_resources.files("todolist") / "templates"),
+        static_folder=str(pkg_resources.files("todolist") / "static")
+    )
 
 ##### INITIALIZE DB ##########
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///todolist.sqlite3'
+db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'todolist.sqlite3')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_path
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 # db.app = app
@@ -27,8 +34,9 @@ class ToDo(db.Model):
         return '<Task %r>' % self.id
 
 
-if not isfile('todolist.sqlite3'):
-    db.create_all()  # Create a db file is not already present
+if not isfile(db_path):
+    with app.app_context():
+        db.create_all()  # Create a db file is not already present
 
 
 @app.route('/',methods=['POST','GET'])
@@ -78,5 +86,8 @@ def delete(id):
     except:
         return 'There was a problem deleting the task'
 
-if __name__ == '__main__':
+def main():
     app.run(debug=True)
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,2 @@
+recursive-include todolist/static *
+recursive-include todolist/templates *
